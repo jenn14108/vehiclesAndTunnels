@@ -3,10 +3,11 @@ package cs131.pa2.CarsTunnels;
 import cs131.pa2.Abstract.Tunnel;
 import cs131.pa2.Abstract.Vehicle;
 import cs131.pa2.Abstract.Direction;
+import java.util.*;
 
 public class BasicTunnel extends Tunnel{
 
-	protected Direction tunnelDirection; //needed to keep track of the current direction of the one road in tunnel 
+	protected List<Direction> tunnelDirection; //needed to keep track of the current direction of the one road in tunnel, and the vehicles inside of it 
 	protected int sleds; //needed to keep track of the number of sleds in the tunnel. Should never exceed 1
 	protected int cars; //needed to keep track of the number of cars in the tunnel. Should never exceed 3
 	
@@ -15,7 +16,7 @@ public class BasicTunnel extends Tunnel{
 		super(name);
 		this.sleds = 0;
 		this.cars = 0;
-		this.tunnelDirection = null; //no direction is determined yet when tunnel is first created
+		this.tunnelDirection = new ArrayList<>(); //no direction is determined yet when tunnel is first created
 	}
 
 	@Override
@@ -26,9 +27,9 @@ public class BasicTunnel extends Tunnel{
 		if (vehicle instanceof Car) {
 			if (this.sleds > 0 || this.cars == 3) {
 				return false;
-			} else if (tunnelDirection == null || tunnelDirection.equals(vehicle.getDirection())){
+			} else if (this.tunnelDirection.size()==0 || tunnelDirection.contains(vehicle.getDirection())){
 				this.cars ++;
-				this.tunnelDirection = vehicle.getDirection();
+				this.tunnelDirection.add(vehicle.getDirection());
 				return true;
 			} else {
 				return false;
@@ -36,9 +37,9 @@ public class BasicTunnel extends Tunnel{
 		} else { //vehicle is an instance of Sled. We check if there is already a sled, or there is a car
 			if (this.sleds > 0 || this.cars > 0) {
 				return false;
-			} else if (tunnelDirection == null || tunnelDirection.equals(vehicle.getDirection())){
+			} else if (this.tunnelDirection.size()==0|| tunnelDirection.contains(vehicle.getDirection())){
 				this.sleds ++;
-				this.tunnelDirection = vehicle.getDirection();
+				this.tunnelDirection.add(vehicle.getDirection());
 				return true;
 			} else {
 				return false;
@@ -54,7 +55,7 @@ public class BasicTunnel extends Tunnel{
 			this.sleds --;
 		}
 		if (this.cars == 0 && this.sleds == 0) {
-			this.tunnelDirection = null;
+			this.tunnelDirection.remove(vehicle.getDirection());
 		}
 	}
 	
