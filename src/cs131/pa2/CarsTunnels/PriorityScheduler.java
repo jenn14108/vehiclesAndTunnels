@@ -23,7 +23,12 @@ public class PriorityScheduler extends Tunnel{
 		this.priorityMet = lock.newCondition();
 		this.enterTunnel = lock.newCondition();
 		this.vehiclesToTunnels = new HashMap<>();
-		this.priorityQueue = new PriorityQueue<>();
+		this.priorityQueue = new PriorityQueue<>(new Comparator<Vehicle>() {
+			@Override
+			public int compare(Vehicle a, Vehicle b) {
+				return b.getPriority() - a.getPriority();
+			}
+		});
 	}
 
 	@Override
