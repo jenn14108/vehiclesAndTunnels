@@ -10,17 +10,28 @@ public class BasicTunnel extends Tunnel{
 	protected Direction tunnelDirection; //needed to keep track of the current direction of the one road in tunnel 
 	protected int sleds; //needed to keep track of the number of sleds in the tunnel. Should never exceed 1
 	protected int cars; //needed to keep track of the number of cars in the tunnel. Should never exceed 3
+	protected int ambulance;
 	
 	public BasicTunnel(String name) {
 		super(name);
 		this.sleds = 0;
 		this.cars = 0;
+		this.ambulance = 0;
 		this.tunnelDirection = null; //no direction is determined yet when tunnel is first created
 	}
 
 	@Override
 	public synchronized boolean tryToEnterInner(Vehicle vehicle) {
 		//first check what type of vehicle this is
+		//always let ambulance go first
+		if (vehicle instanceof Ambulance) {
+			if (this.ambulance == 0) {
+				this.ambulance ++;
+				return true;
+			} else { //there is another ambulance 
+				return false;
+			}
+		}
 		//vehicle = car, then we need to check that no sled is inside, and the #
 		//of cars is < 3
 		if (vehicle instanceof Car) {
@@ -47,6 +58,9 @@ public class BasicTunnel extends Tunnel{
 
 	@Override
 	public synchronized void exitTunnelInner(Vehicle vehicle) {
+		if (vehicle instanceof Ambulance) {
+			this.ambulance --;
+		}
 		if (vehicle instanceof Car) {
 			this.cars --;
 		} else {
@@ -59,6 +73,12 @@ public class BasicTunnel extends Tunnel{
 	
 	//method used to loop through collection of tunnels to see if there is one free for priorityScheduler
 	public synchronized boolean canEnter(Vehicle vehicle) {
+		if (vehicle instanceof Ambulance) {
+			if (this.ambulance != 0) {
+				return false;
+			}
+		}
+		
 		if (vehicle instanceof Car) {
 			if (this.cars == 3) {
 				return false;

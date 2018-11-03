@@ -1,5 +1,6 @@
 package cs131.pa2.Abstract;
 import java.util.*;
+import java.util.concurrent.locks.*;
 
 import cs131.pa2.Abstract.Log.EventType;
 import cs131.pa2.Abstract.Log.Log;
@@ -26,7 +27,10 @@ public abstract class Vehicle implements Runnable {
     private Collection<Tunnel> 	tunnels;
     private int                	priority;
     private int                	speed;
-    private Log 				log;
+    private Log 					log;
+    private Lock 				lock;
+    private Condition 			waitIndefinitely;
+    private Condition 			waitForOtherAmbulance;
 
     /**
      * Initialize a Vehicle; called from Vehicle constructors.
@@ -39,6 +43,11 @@ public abstract class Vehicle implements Runnable {
         this.speed     = getDefaultSpeed();
         this.log       = log;
         this.tunnels   = new ArrayList<Tunnel>();
+        this.lock      = new ReentrantLock();
+        this.waitIndefinitely = lock.newCondition();
+        this.waitForOtherAmbulance = lock.newCondition();
+ 
+        
 
         if(this.speed < 0 || this.speed > 9) {
             throw new RuntimeException("Vehicle has invalid speed");

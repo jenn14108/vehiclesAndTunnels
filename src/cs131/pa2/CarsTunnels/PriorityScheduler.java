@@ -65,8 +65,7 @@ public class PriorityScheduler extends Tunnel{
 			//get a pairing of the vehicle with its tunnel
 			vehiclesToTunnels.put(vehicle, freeTunnel);
 			//enter tunnel
-			freeTunnel.tryToEnterInner(vehicle);
-			return true;
+			return freeTunnel.tryToEnterInner(vehicle);
 		} catch (InterruptedException e) {
 			e.printStackTrace();	
 		} finally {
