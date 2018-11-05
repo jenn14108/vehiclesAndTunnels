@@ -15,14 +15,16 @@ public class PriorityScheduler extends Tunnel{
 	private Collection<Tunnel> tunnels;
 	private HashMap<Vehicle,Tunnel> vehiclesToTunnels;
 	private PriorityQueue<Vehicle> priorityQueue;
-	
+
 	public PriorityScheduler(String name, Collection<Tunnel> tunnels, Log log) {
 		super(name,log);
 		this.tunnels = tunnels;
 		this.lock = new ReentrantLock();
 		this.priorityMet = lock.newCondition();
 		this.enterTunnel = lock.newCondition();
+		
 		this.vehiclesToTunnels = new HashMap<>();
+			
 		this.priorityQueue = new PriorityQueue<>(new Comparator<Vehicle>() {
 			@Override
 			public int compare(Vehicle a, Vehicle b) {
@@ -58,14 +60,12 @@ public class PriorityScheduler extends Tunnel{
 			while (!priorityQueue.peek().equals(vehicle)) {
 				priorityMet.await();
 			}
-			//this means that this vehicle now has highest priority and can go, remove from waiting queue
+		
 			priorityQueue.remove(vehicle);
-			//signal to other waiting vehicles
-			priorityMet.signalAll();
-			//get a pairing of the vehicle with its tunnel
+			priorityMet.signalAll();			
 			vehiclesToTunnels.put(vehicle, freeTunnel);
-			//enter tunnel
-			return freeTunnel.tryToEnterInner(vehicle);
+
+			return true;
 		} catch (InterruptedException e) {
 			e.printStackTrace();	
 		} finally {

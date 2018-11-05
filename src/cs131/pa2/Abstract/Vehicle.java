@@ -1,9 +1,11 @@
 package cs131.pa2.Abstract;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.*;
 
 import cs131.pa2.Abstract.Log.EventType;
 import cs131.pa2.Abstract.Log.Log;
+import cs131.pa2.CarsTunnels.Ambulance;
 
 /**
  * A Vehicle is a Runnable which enters tunnels. You must subclass
@@ -27,28 +29,22 @@ public abstract class Vehicle implements Runnable {
     private Collection<Tunnel> 	tunnels;
     private int                	priority;
     private int                	speed;
-    private Log 					log;
+    private Log 				log;
+    
     private Lock 				lock;
-    private Condition 			waitIndefinitely;
-    private Condition 			waitForOtherAmbulance;
+    private Condition 			ambulance;
 
     /**
      * Initialize a Vehicle; called from Vehicle constructors.
      */
-    private void init(String name, Direction direction,
-                      int priority, Log log) {
+    private void init(String name, Direction direction, int priority, Log log) {
         this.name      = name;
         this.direction = direction;
         this.priority  = 0;
         this.speed     = getDefaultSpeed();
         this.log       = log;
         this.tunnels   = new ArrayList<Tunnel>();
-        this.lock      = new ReentrantLock();
-        this.waitIndefinitely = lock.newCondition();
-        this.waitForOtherAmbulance = lock.newCondition();
- 
         
-
         if(this.speed < 0 || this.speed > 9) {
             throw new RuntimeException("Vehicle has invalid speed");
         }
@@ -78,6 +74,11 @@ public abstract class Vehicle implements Runnable {
     
     public Vehicle(String name, Direction direction) {
         this(name, direction, Tunnel.DEFAULT_LOG);
+    }
+    
+    public void setLock(Lock lock, Condition ambulance) {
+    	this.lock = lock;
+    	this.ambulance = ambulance;   
     }
     
     /**
@@ -168,17 +169,40 @@ public abstract class Vehicle implements Runnable {
         return direction;
     }
 
+  
     /**
      * This is what your vehicle does while inside the tunnel to
      * simulate taking time to "cross" the tunnel. The faster your
      * vehicle is, the less time this will take.
      */
     public final void doWhileInTunnel() {
-         try {
-             Thread.sleep((10 - speed) * 100);
-         } catch(InterruptedException e) {
-             System.err.println("Interrupted vehicle " + getName());
-         }
+        if(this.lock == null) {
+        	try {
+				Thread.sleep((10 - speed) * 100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+        } else {
+        	this.lock.lock();
+        	try {
+        		if (this instanceof Ambulance) {
+        			Thread.sleep((10 - speed) * 100);
+        			this.ambulance.signalAll();
+        		} else {
+        			long nanos = this.ambulance.awaitNanos((10 - speed) * 100); 
+        			while(nanos > 0) {
+        				this.ambulance.await();
+        				nanos = this.ambulance.awaitNanos(nanos); 
+        			}
+        			
+        		}
+            } catch(InterruptedException e) {
+            	System.err.println("Interrupted vehicle " + getName());
+            } finally {
+            	this.lock.unlock();
+            }
+        }
+        
     }
     
     @Override

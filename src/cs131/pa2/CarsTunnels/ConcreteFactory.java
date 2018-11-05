@@ -32,7 +32,7 @@ public class ConcreteFactory implements Factory {
 
 	@Override
 	public Vehicle createNewAmbulance(String label, Direction direction) {
-		throw new UnsupportedOperationException("Not supported yet.");
+			return new Ambulance(label, direction);
 	}
 
 	@Override
