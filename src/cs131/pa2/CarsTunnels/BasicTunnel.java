@@ -46,10 +46,12 @@ public class BasicTunnel extends Tunnel{
 			} else {
 				return false;
 			}
-		} else { //vehicle is an instance of Sled. We check if there is already a sled, or there is a car
+		} else { //vehicle is an instance of Sled. We check if there is already a sled,
+				//or there is a car
 			if (this.sleds > 0 || this.cars > 0) {
 				return false;
-			}  //no need to check direction if Sled tunnel is free, as sled will be the only vehicle inside the tunnel
+			}  //no need to check direction if Sled tunnel is free, as sled will be
+			   //the only vehicle inside the tunnel
 			this.sleds ++;
 			this.tunnelDirection = vehicle.getDirection();
 			return true;
@@ -71,7 +73,12 @@ public class BasicTunnel extends Tunnel{
 		}
 	}
 	
-	//method used to loop through collection of tunnels to see if there is one free for priorityScheduler
+	/**
+	 * This method used to loop through collection of tunnels to see if there
+	 * is one free for priorityScheduler
+	 * @param vehicle
+	 * @return
+	 */
 	public synchronized boolean canEnter(Vehicle vehicle) {
 		if (vehicle instanceof Ambulance) {
 			if (this.ambulance != 0) {

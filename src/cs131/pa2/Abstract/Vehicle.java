@@ -29,10 +29,10 @@ public abstract class Vehicle implements Runnable {
     private Collection<Tunnel> 	tunnels;
     private int                	priority;
     private int                	speed;
-    private Log 				log;
+    private Log 					log;
     
-    private Lock 				lock;
-    private Condition 			ambulance;
+    private Lock 				lock; //lock for the vehicle 
+    private Condition 			ambulance; //condition for all vehicles to check whether there is an ambulance
 
     /**
      * Initialize a Vehicle; called from Vehicle constructors.
@@ -76,6 +76,11 @@ public abstract class Vehicle implements Runnable {
         this(name, direction, Tunnel.DEFAULT_LOG);
     }
     
+    /**
+     * This method 'puts' the tunnel lock onto the vehicle inside of it
+     * @param lock the specific vehicle's lock
+     * @param ambulance 
+     */
     public void setLock(Lock lock, Condition ambulance) {
     	this.lock = lock;
     	this.ambulance = ambulance;   
@@ -176,20 +181,25 @@ public abstract class Vehicle implements Runnable {
      * vehicle is, the less time this will take.
      */
     public final void doWhileInTunnel() {
+    		//first if statement is for executing the priorityScheduler
         if(this.lock == null) {
         	try {
 				Thread.sleep((10 - speed) * 100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-        } else {
+        } else { //PreemptivePriorityScheduler
         	this.lock.lock();
         	try {
+        		//if is ambulance, simply sleep, and then signal other vehicles when exit out of tunnel
         		if (this instanceof Ambulance) {
         			Thread.sleep((10 - speed) * 100);
         			this.ambulance.signalAll();
         		} else {
+        			//for normal vehicles, await for a certain period of time 
         			long nanos = this.ambulance.awaitNanos((10 - speed) * 100); 
+        			//just in case multiple ambulances come in after another exists, we have a while 
+        			//look to check for the remaining wait time for normal vehicles after being interrupted
         			while(nanos > 0) {
         				this.ambulance.await();
         				nanos = this.ambulance.awaitNanos(nanos); 
