@@ -149,17 +149,13 @@ public abstract class Vehicle implements Runnable {
      * the tunnel), then exit that tunnel.
      */
     public final void run() {
-        // Loop over all tunnels repeated until we can enter one, then
-        // think inside the tunnel, exit the tunnel, and leave this
-        // entire method.
-        //
         while(true) {
             for(Tunnel tunnel : tunnels) {
                 if(tunnel.tryToEnter(this)) {
                     doWhileInTunnel();
                     tunnel.exitTunnel(this);
                     this.log.addToLog(this, EventType.COMPLETE);
-                    return; // done, so leave the whole function
+                    return; 
                 }
             }
         }
@@ -181,7 +177,7 @@ public abstract class Vehicle implements Runnable {
      * vehicle is, the less time this will take.
      */
     public final void doWhileInTunnel() {
-    		//first if statement is for executing the priorityScheduler
+    	//if lock is null, all threads sleep because it's simple priority scheduler
         if(this.lock == null) {
         	try {
 				Thread.sleep((10 - speed) * 100);
@@ -198,8 +194,8 @@ public abstract class Vehicle implements Runnable {
         		} else {
         			//for normal vehicles, await for a certain period of time 
         			long nanos = this.ambulance.awaitNanos((10 - speed) * 100); 
-        			//just in case multiple ambulances come in after another exists, we have a while 
-        			//look to check for the remaining wait time for normal vehicles after being interrupted
+        			
+        			//only exits when remaining time is 0
         			while(nanos > 0) {
         				this.ambulance.await();
         				nanos = this.ambulance.awaitNanos(nanos); 

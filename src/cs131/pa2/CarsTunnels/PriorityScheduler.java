@@ -9,10 +9,11 @@ import cs131.pa2.Abstract.Log.Log;
 
 public class PriorityScheduler extends Tunnel{
 
-	private Lock lock; //we need a lock for the scheduler
-	private Condition priorityMet; //condition to check for the priority requirement
-	private Condition enterTunnel; //condition to check for the tunnel requirement (there must be a free one)
-	private Collection<Tunnel> tunnels; //keeps all the tunnels we have to loop through when checking for a free one 
+	private Lock lock; 
+	private Condition priorityMet; //check for the priority requirement
+	private Condition enterTunnel; //check for free tunnel
+	
+	private Collection<Tunnel> tunnels; 
 	private HashMap<Vehicle,Tunnel> vehiclesToTunnels; //keeps track of the tunnel each vehicle is in
 	private PriorityQueue<Vehicle> priorityQueue; //highest priority vehicles get to access and enter tunnel first
 
@@ -40,9 +41,19 @@ public class PriorityScheduler extends Tunnel{
 	@Override
 	public boolean tryToEnterInner(Vehicle vehicle) {
 		this.lock.lock();
-		//check 2 conditions: check for a free tunnel, and that priority is high enough to attempt entering
+		
 		try {
-			//before we even check the priority of the vehicle, we check that a tunnel actually exists
+			//check for priority of the vehicle
+			priorityQueue.add(vehicle);
+			while (!priorityQueue.peek().equals(vehicle)) {
+				priorityMet.await();
+			}
+		
+			//remove vehicle from queue and signal others awaiting
+			priorityQueue.remove(vehicle);		
+			priorityMet.signalAll();	
+			
+			//check that a tunnel actually exists
 			BasicTunnel freeTunnel = null;
 			while (freeTunnel == null) {
 				for (Tunnel tunnel: tunnels) {
@@ -57,25 +68,13 @@ public class PriorityScheduler extends Tunnel{
 				}
 				
 			}
-			//since we exited out of the while loop, it means that there is a free tunnel
-			//now we check priority
-			priorityQueue.add(vehicle);
-			while (!priorityQueue.peek().equals(vehicle)) {
-				priorityMet.await();
-			}
-		
-			//remove vehicle from queue, put vehicle and its tunnel into hashmap, and signalAll
-			priorityQueue.remove(vehicle);		
 			vehiclesToTunnels.put(vehicle, freeTunnel);
-			priorityMet.signalAll();	
-
 			return true;
 		} catch (InterruptedException e) {
 			e.printStackTrace();	
 		} finally {
 			this.lock.unlock();
 		}
-		
 		return false;
 	}
 
@@ -84,9 +83,10 @@ public class PriorityScheduler extends Tunnel{
 		this.lock.lock();
 		try {
 			//find the tunnel the vehicle is in, have the vehicle exit the tunnel,
-			//signal other vehicles that this vehicle has left tunnel
 			BasicTunnel tunnel = (BasicTunnel) vehiclesToTunnels.get(vehicle);
 			tunnel.exitTunnelInner(vehicle);
+			
+			//signal other vehicles that this vehicle has left tunnel
 			enterTunnel.signalAll();
 			this.vehiclesToTunnels.remove(vehicle);
 		} finally {
