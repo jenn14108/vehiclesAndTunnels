@@ -73,31 +73,4 @@ public class BasicTunnel extends Tunnel{
 		}
 	}
 	
-	/**
-	 * This method used to loop through collection of tunnels to see if there
-	 * is one free for priorityScheduler
-	 * @param vehicle
-	 * @return
-	 */
-	public synchronized boolean canEnter(Vehicle vehicle) {
-		if (vehicle instanceof Ambulance) {
-			if (this.ambulance != 0) {
-				return false;
-			}
-		}
-		
-		if (vehicle instanceof Car) {
-			if (this.cars == 3) {
-				return false;
-			} 
-		}
-		if (vehicle instanceof Sled) {
-			if (this.sleds == 1) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-	
 }
