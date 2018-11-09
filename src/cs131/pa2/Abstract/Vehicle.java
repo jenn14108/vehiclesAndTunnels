@@ -187,14 +187,14 @@ public abstract class Vehicle implements Runnable {
         } else { //PreemptivePriorityScheduler
         	this.lock.lock();
         	try {
-        		//if is ambulance, simply sleep, and then signal other vehicles when exit out of tunnel
+        		//if is ambulance, interrupt, sleep, and then signal other vehicles when exit out of tunnel
         		if (this instanceof Ambulance) {
         			this.ambulance.signalAll();
         			Thread.sleep((10 - speed) * 100);
         			this.ambulance.signalAll();
         		} else {
         			//for normal vehicles, await for a certain period of time 
-        			long nanos = this.ambulance.awaitNanos((10 - speed) * 100); 
+        			long nanos = this.ambulance.awaitNanos((10 - speed) * 100 * 1000000); 
         			//only exits when remaining time is 0
         			while(nanos > 0) {
         				this.ambulance.await();
