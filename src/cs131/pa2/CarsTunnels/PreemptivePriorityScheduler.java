@@ -83,10 +83,7 @@ public class PreemptivePriorityScheduler extends Tunnel{
 				while (!carPriority.peek().equals(vehicle)) {
 					this.priorityMet.await();
 				}
-				carPriority.remove(vehicle);
-				priorityMet.signalAll();
 				
-			
 				while (freeTunnel == null) {
 					freeTunnel = (BasicTunnel)this.checkForFreeTunnel(vehicle);
 				}
@@ -118,9 +115,12 @@ public class PreemptivePriorityScheduler extends Tunnel{
 				this.ambulCanEnter.signalAll();
 				this.vehiclesToTunnels.remove(vehicle);
 			} else {        //normal vehicle, simply exit
+				carPriority.remove(vehicle);
+				priorityMet.signalAll();
 				tunnel.exitTunnelInner(vehicle);
 				this.vehiclesToTunnels.remove(vehicle);
 			}
+			
 		} finally {
 			this.schedulerLock.unlock();
 		}

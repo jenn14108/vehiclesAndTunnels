@@ -48,16 +48,12 @@ public class PriorityScheduler extends Tunnel{
 			while (!priorityQueue.peek().equals(vehicle)) {
 				priorityMet.await();
 			}
-		
-			//remove vehicle from queue and signal others awaiting
-			priorityQueue.remove(vehicle);		
-			priorityMet.signalAll();	
 			
 			//check that a tunnel actually exists
 			BasicTunnel freeTunnel = null;
 			while (freeTunnel == null) {
 				for (Tunnel tunnel: tunnels) {
-					if (((BasicTunnel) tunnel).canEnter(vehicle) == true) {
+					if (tunnel.tryToEnter(vehicle) == true) {
 						freeTunnel = (BasicTunnel) tunnel;
 						break;
 					}
@@ -85,7 +81,9 @@ public class PriorityScheduler extends Tunnel{
 			//find the tunnel the vehicle is in, have the vehicle exit the tunnel,
 			BasicTunnel tunnel = (BasicTunnel) vehiclesToTunnels.get(vehicle);
 			tunnel.exitTunnelInner(vehicle);
-			
+			//remove vehicle from queue and signal others awaiting
+			priorityQueue.remove(vehicle);		
+			priorityMet.signalAll();	
 			//signal other vehicles that this vehicle has left tunnel
 			enterTunnel.signalAll();
 			this.vehiclesToTunnels.remove(vehicle);
